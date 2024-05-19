@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <math.h>
+#include <time.h>
 #include <SDL2/SDL.h>
 #include "chip8.h"
 
@@ -10,8 +11,6 @@
 #define DEBUG_CPU 0
 #define DEBUG_MEM 0
 
-static void chip_draw_sprite(chip8_t *c8, u8 x, u8 y);
-static void chip_clear_display(chip8_t *c8);
 static void debug_print_mem(chip8_t *c8);
 
 // chip-8 fontset
@@ -52,7 +51,7 @@ void chip_do_cycle(chip8_t *c8) {
             switch(kk) {
                 default: /* SYS is unimplemented, NOP */ break;
                 case 0xE0: // CLS
-                    //chip_clear_display(c8);
+                    memset(c8->vram, 0, DISP_X * DISP_Y);
                     break;
                 case 0xEE: // RET
                     cpu->PC = cpu->stack[cpu->SP];
@@ -60,24 +59,24 @@ void chip_do_cycle(chip8_t *c8) {
                     break;
             }
             break;
-        case 0x1000: // JMP (jump)
+        case 0x1000: 
             cpu->PC = nnn;
-            break;
+            break; // JMP (jump)
         case 0x2000: // CALL (call subroutine)
             cpu->stack[++cpu->PC] = cpu->PC;
             cpu->PC = nnn;
             break;
         case 0x3000: // SE (skip if Vx = kk)
             if(cpu->V[x] == kk)
-                c8->cpu->PC += 2;
+                cpu->PC += 2;
             break;
         case 0x4000: // SNE (skip if Vx != kk)
             if(cpu->V[x] != kk)
-                c8->cpu->PC += 2;
+                cpu->PC += 2;
             break;
         case 0x5000: // SE (skip if Vx = Vy)
             if(cpu->V[x] == cpu->V[y])
-                c8->cpu->PC += 2;
+                cpu->PC += 2;
             break;
         case 0x6000: // LD (load kk into Vx)
             cpu->V[x] = kk;
@@ -123,7 +122,7 @@ void chip_do_cycle(chip8_t *c8) {
             break;
         case 0x9000: // SNE (skip if Vx != Vy)
             if(cpu->V[x] != cpu->V[y])
-                c8->cpu->PC += 2;
+                cpu->PC += 2;
             break;
         case 0xA000: // LD (I = nnn)
             cpu->I = nnn;
@@ -131,13 +130,28 @@ void chip_do_cycle(chip8_t *c8) {
         case 0xB000: // JMP (PC = V0+nnn)
             cpu->PC = cpu->V[0] + nnn;
             break;
-        case 0xC000:
+        case 0xC000: // RND
+            cpu->V[x] = (rand() % 0xFF) & kk;
             break;
         case 0xD000:
+            for(int j = 0; j < n; j++) {
+                u8 byte = c8->memory[cpu->I + j];
+                for(int i = 0; i < 8; i++) {
+                    u8 pixel = (byte >> i) & 1;
+                    
+                }
+            }
             break;
         case 0xE000:
             switch(kk) {
-
+                case 0x9E: // SKP (keyboard skip)
+                    if(c8->keys[cpu->V[x]])
+                        cpu->PC += 2;
+                    break;
+                case 0xA1: // SKNP (keyboard not skip)
+                    if(c8->keys[cpu->V[x]] == 0)
+                        cpu->PC += 2;
+                    break;
             }
             break;
         case 0xF000:
@@ -146,17 +160,7 @@ void chip_do_cycle(chip8_t *c8) {
             }
             break;
     }
-    c8->cpu->PC += 2;
-    
-    // printf("%03X\n", NNN(inst));
-    // printf("%01X\n", N(inst));
-    // printf("%01X\n", X(inst));
-    // printf("%01X\n", Y(inst));
-    // printf("%02X\n", KK(inst));
-}
-
-static void chip_draw_sprite(chip8_t *c8, u8 x, u8 y) {
-    
+    cpu->PC += 2;
 }
 
 void chip_draw_display(chip8_t *c8, SDL_Renderer *renderer) {
@@ -199,6 +203,9 @@ chip8_t *chip_init() {
     memset(c8->vram, 0, DISP_X * DISP_Y);
     for(int i = 0; i < FONTSET_SIZE; i++)
         c8->memory[i] = fontset[i];
+
+    time_t t;
+    srand((unsigned int) time(&t));
 
     return c8;
 }

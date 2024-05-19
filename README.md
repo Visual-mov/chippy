@@ -1,2 +1,2 @@
 # chippy
-chippy is a CHIP-8 written in C using SDL2 as a frontend.
+CHIP-8 interpreter written in C using SDL2 as a frontend.

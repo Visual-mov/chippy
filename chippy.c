@@ -13,11 +13,13 @@
 
 int main(int argc, char *argv[]) {
     chip8_t *c8 = chip_init();
-    load_rom(c8, "./roms/test/programs/Chip8 emulator Logo [Garstyciuks].ch8");
 
-    // printf("%02X %02X\n", c8->memory[0x200], c8->memory[0x201]);
-    //printf("%04X\n", (c8->memory[0x200] << 8) | c8->memory[0x201]);
-    //c8_do_cycle((c8->memory[0x200] << 8) | c8->memory[0x201]);
+    c8->memory[0x200] = 0xD0;
+    c8->memory[0x201] = 0x01;
+    c8->cpu->I = 0;
+    c8->memory[0] = 0xAA;
+
+    //load_rom(c8, "./roms/test/programs/Chip8 emulator Logo [Garstyciuks].ch8");
 
     // set up SDL
     if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
@@ -30,14 +32,16 @@ int main(int argc, char *argv[]) {
         WIN_WIDTH, WIN_HEIGHT,
         SDL_WINDOW_SHOWN
     );
+
+    if(!window) {
+        CHIP_ERR("Could not create SDL window");
+    }
+
     SDL_Renderer *renderer = SDL_CreateRenderer(
         window, -1,
         SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED
     );
 
-    if(!window) {
-        CHIP_ERR("Could not create SDL window");
-    }
     if(!renderer) {
         CHIP_ERR("Could not create SDL renderer");
     }

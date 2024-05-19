@@ -35,9 +35,9 @@ typedef struct chip8_t {
 } chip8_t;
 
 chip8_t *chip_init();
-//void chip_update(chip8_t *c8);
 void chip_do_cycle(chip8_t *c8);
 void chip_draw_display(chip8_t *c8, SDL_Renderer *renderer);
 void chip_input(chip8_t *c8, SDL_Event event);
 void chip_free(chip8_t *c8);
+
 void load_rom(chip8_t *c8, char *path);
